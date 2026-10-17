@@ -14,6 +14,8 @@ import static org.junit.Assert.*;
 public class TestTvProfilePolicy {
     @Test public void copyPreservesOriginalAndGeneratesFullRoutes() {
         VpnProfile original = new VpnProfile("Home");
+        // Avoid the default external-keystore path in this routing-only fixture.
+        original.mAuthenticationType = VpnProfile.TYPE_USERPASS;
         original.mUseDefaultRoute = false;
         original.mAllowLocalLAN = true;
         original.mAllowedAppsVpn.add("example.streaming.app");
