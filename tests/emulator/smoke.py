@@ -43,7 +43,7 @@ def launch():
     assert 'Error:' not in response, response
     for attempt in range(5):
         root = snapshot(f'dashboard-{attempt}')
-        if contains(root, 'Home VPN'):
+        if contains(root, 'Home VPN') or contains(root, 'System VPN protection settings'):
             # Phone emulators initially use touch mode. A D-pad event enters
             # keyboard navigation; verify focus rather than assuming it exists.
             if not any(n.get('focused') == 'true' for n in root.iter('node')):
@@ -107,9 +107,12 @@ try:
         or contains(root, 'VPN settings unavailable'), 'Neither settings nor fallback appeared'
     passed('System VPN settings or explicit unsupported-device fallback')
 
+    root = key(4, 'back-from-vpn-settings')
+    expect(root, 'System VPN protection settings')
+    passed('Back from VPN settings returns to dashboard')
     root = key(3, 'home')
     root = launch()
-    expect(root, 'Home VPN')
+    expect(root, 'System VPN protection settings')
     assert adb('shell', 'pidof', PACKAGE).strip(), 'App process missing'
     passed('Return from Home and relaunch')
     crash = adb('logcat', '-b', 'crash', '-d').decode(errors='replace')
