@@ -1,8 +1,6 @@
 """UI smoke checks for a pinned APK; does not test a VPN server or network leaks."""
-import hashlib
 import json
 import pathlib
-import re
 import subprocess
 import time
 import xml.etree.ElementTree as ET
@@ -46,6 +44,10 @@ def launch():
     for attempt in range(5):
         root = snapshot(f'dashboard-{attempt}')
         if contains(root, 'Home VPN'):
+            # Phone emulators initially use touch mode. A D-pad event enters
+            # keyboard navigation; verify focus rather than assuming it exists.
+            if not any(n.get('focused') == 'true' for n in root.iter('node')):
+                root = key(19, 'enter-dpad-mode')
             return root
         time.sleep(1)
     raise AssertionError('Dashboard did not appear')
@@ -64,6 +66,8 @@ try:
     assert 'Success' in install, install
     passed('APK installation on Android 11 x86_64')
     adb('logcat', '-c')
+    adb('shell', 'wm', 'size', '1080x1920')
+    adb('shell', 'wm', 'density', '320')
     adb('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0')
     adb('shell', 'settings', 'put', 'system', 'user_rotation', '1')
     adb('shell', 'input', 'keyevent', '82')
