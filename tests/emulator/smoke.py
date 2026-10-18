@@ -116,7 +116,11 @@ try:
     passed('Back from VPN settings returns to dashboard')
     root = key(3, 'home')
     root = launch()
-    expect(root, 'System VPN protection settings')
+    resumed = adb('shell', 'dumpsys', 'activity', 'activities').decode()
+    (OUT / 'relaunch-activity.txt').write_text(resumed)
+    assert any('TvDashboardActivity' in line and ('ResumedActivity' in line or 'topResumedActivity' in line)
+               for line in resumed.splitlines()), 'Dashboard activity is not resumed'
+    assert contains(root, 'Home VPN') or contains(root, 'System VPN protection settings'), 'Dashboard controls missing'
     assert adb('shell', 'pidof', PACKAGE).strip(), 'App process missing'
     passed('Return from Home and relaunch')
     crash = adb('logcat', '-b', 'crash', '-d').decode(errors='replace')
