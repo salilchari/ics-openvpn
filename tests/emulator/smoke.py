@@ -65,12 +65,16 @@ try:
     install = adb('install', '-r', str(apk)).decode()
     assert 'Success' in install, install
     passed('APK installation on Android 11 x86_64')
+    reset = adb('shell', 'pm', 'clear', PACKAGE).decode()
+    assert 'Success' in reset, reset
+    adb('shell', 'am', 'force-stop', PACKAGE)
     adb('logcat', '-c')
     adb('shell', 'wm', 'size', '1080x1920')
     adb('shell', 'wm', 'density', '320')
     adb('shell', 'settings', 'put', 'system', 'accelerometer_rotation', '0')
     adb('shell', 'settings', 'put', 'system', 'user_rotation', '1')
     adb('shell', 'input', 'keyevent', '82')
+    time.sleep(2)  # Let display configuration settle before the first activity.
     root = launch()
     expect(root, 'Internet blocking is NOT verified')
     focused(root, 'Connect a saved profile')
