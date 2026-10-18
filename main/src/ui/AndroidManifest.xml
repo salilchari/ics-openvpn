@@ -18,6 +18,15 @@
     <uses-sdk tools:overrideLibrary="androidx.security"/>
 
     <application android:banner="@mipmap/banner_tv">
+        <activity android:name=".activities.TvDashboardActivity"
+                  android:exported="true"
+                  android:theme="@android:style/Theme.Material.NoActionBar"
+                  android:label="Home VPN TV (development)">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
+            </intent-filter>
+        </activity>
         <activity
                 android:exported="true"
                 android:name=".activities.MainActivity"
@@ -25,7 +34,6 @@
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>

@@ -1,0 +1,57 @@
+name: Fire TV APK emulator checks
+on:
+  workflow_dispatch:
+  push:
+    branches: [firetv-development]
+    paths:
+      - '.github/workflows/firetv-emulator.yml'
+      - 'tests/emulator/**'
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: firetv-emulator-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v7
+      - name: Download the previously tested development APK
+        uses: actions/download-artifact@v4
+        with:
+          name: firetv-development-apk
+          run-id: 39072189825
+          github-token: ${{ github.token }}
+          path: apk
+      - name: Verify APK identity
+        run: |
+          python3 - <<'PY'
+          import pathlib, hashlib
+          files = list(pathlib.Path('apk').rglob('*.apk'))
+          assert len(files) == 1, files
+          assert hashlib.sha256(files[0].read_bytes()).hexdigest() == '3a6a1d3c3173384d70085ad1f25d868fd002bc5814896c60d401a8e9b00c032a'
+          print('Verified APK from commit 7eca7b8910c871a7b657b066e282f632a2ac5716')
+          PY
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run Android 11 navigation and crash checks
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 30
+          target: google_apis
+          arch: x86_64
+          disable-animations: true
+          emulator-boot-timeout: 600
+          script: python3 tests/emulator/smoke.py
+      - name: Save screenshots, UI trees, logs and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: firetv-android11-emulator-evidence
+          path: emulator-evidence/
+          if-no-files-found: warn
